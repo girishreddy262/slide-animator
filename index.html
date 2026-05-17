@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Darwinbox slide animator</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #FAFAF7; --surface: #FFFFFF; --surface-2: #F3F2EE;
+    --border: rgba(0,0,0,0.1); --border-2: rgba(0,0,0,0.18);
+    --text: #1A1A1A; --text-2: #5F5F5F; --text-3: #9A9A9A;
+    --info: #185FA5; --info-bg: #E6F1FB; --info-border: rgba(24,95,165,0.3);
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+    margin: 0; padding: 24px; line-height: 1.5; font-size: 14px;
+  }
+  .app { max-width: 1100px; margin: 0 auto; }
+  .topbar { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+  h1 { font-size: 20px; font-weight: 500; margin: 0; }
+  .topbar p { font-size: 12px; color: var(--text-3); margin: 0; }
+  .wrap { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+  .stage { background: var(--surface-2); border-radius: var(--radius-lg); padding: 16px; min-height: 480px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .stage svg { max-width: 100%; max-height: 540px; }
+  .stage-empty { color: var(--text-3); font-size: 14px; text-align: center; padding: 40px; }
+  .panel { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px; }
+  .drop { border: 1px dashed var(--border-2); border-radius: var(--radius-md); padding: 20px 12px; text-align: center; font-size: 13px; color: var(--text-2); cursor: pointer; }
+  .drop.over { background: var(--info-bg); border-color: var(--info); color: var(--info); }
+  .drop.compact { padding: 10px 12px; font-size: 12px; }
+  .section { margin-top: 14px; }
+  .section-label { font-size: 11px; color: var(--text-3); margin-bottom: 6px; padding: 0 4px; display: flex; justify-content: space-between; align-items: center; }
+  .section-actions { display: flex; gap: 4px; }
+  .link-btn { background: none; border: none; color: var(--info); font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .link-btn:hover { background: var(--info-bg); }
+  .link-btn:disabled { color: var(--text-3); cursor: not-allowed; }
+  .link-btn:disabled:hover { background: none; }
+  .stagger { display: flex; align-items: center; gap: 10px; font-size: 12px; padding: 0 4px; }
+  .stagger input { flex: 1; }
+  .layers-list { max-height: 320px; overflow-y: auto; padding-right: 4px; }
+  .row { display: grid; grid-template-columns: 16px 14px 1fr 84px 50px; gap: 6px; align-items: center; padding: 4px; border-radius: var(--radius-md); font-size: 12px; }
+  .row:hover { background: var(--surface-2); }
+  .row.selected { background: var(--info-bg); }
+  .row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .count { font-size: 10px; color: var(--text-3); margin-left: 4px; }
+  .row select, .row input[type=number] { height: 26px; font-size: 11px; padding: 0 4px; border: 0.5px solid var(--border-2); border-radius: 4px; background: var(--surface); color: var(--text); }
+  .row input[type=checkbox] { margin: 0; width: 14px; height: 14px; cursor: pointer; }
+  .handle { cursor: grab; color: var(--text-3); font-size: 13px; user-select: none; text-align: center; }
+  .row.drag { opacity: 0.4; }
+  .controls { display: flex; gap: 6px; margin-top: 12px; }
+  .controls button { font-size: 12px; padding: 8px 10px; height: 34px; flex: 1; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-2); border-radius: var(--radius-md); cursor: pointer; }
+  .controls button:hover { background: var(--surface-2); }
+  .controls button:active { transform: scale(0.98); }
+  .controls button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .controls .primary { background: var(--info-bg); color: var(--info); border-color: var(--info-border); }
+  .controls .primary:hover { background: #D5E5F5; }
+  .empty { color: var(--text-3); font-size: 12px; text-align: center; padding: 18px 0; }
+  .meta { font-size: 11px; color: var(--text-3); margin-top: 12px; padding-top: 10px; border-top: 0.5px solid var(--border); display: flex; justify-content: space-between; }
+  .progress { display: none; margin-top: 12px; }
+  .progress.show { display: block; }
+  .bar { width: 100%; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .bar-fill { height: 100%; background: var(--info); width: 0%; transition: width 0.1s linear; }
+  .progress-label { font-size: 11px; color: var(--text-2); }
+  .download { display: none; margin-top: 12px; }
+  .download.show { display: block; }
+  .download a { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--info); text-decoration: none; padding: 12px; border: 0.5px solid var(--info-border); border-radius: var(--radius-md); background: var(--info-bg); }
+  .download a .size { font-size: 11px; opacity: 0.7; }
+  .footnote { font-size: 11px; color: var(--text-3); margin-top: 16px; text-align: center; }
+  .tip { font-size: 11px; color: var(--text-2); background: var(--surface-2); padding: 8px 10px; border-radius: var(--radius-md); margin-top: 10px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <h1>Darwinbox slide animator</h1>
+    <p>Upload, arrange, approve, download</p>
+  </div>
+  <div class="wrap">
+    <div class="stage" id="stage">
+      <div class="stage-empty" id="stage-empty">
+        Drop an SVG on the right to begin.<br>
+        <span style="font-size:12px; color: var(--text-3);">Tip: in Figma, use Frames (F) per logical unit before exporting.</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="drop" id="drop">
+        <div style="font-size:18px; margin-bottom:4px;">↑</div>
+        <span id="drop-text">Drop SVG file or click</span>
+      </div>
+      <input type="file" id="file" accept=".svg,image/svg+xml" style="display:none;">
+      <div class="section">
+        <div class="section-label">Stagger between layers</div>
+        <div class="stagger">
+          <input type="range" id="stagger" min="0" max="800" step="50" value="200">
+          <span id="stagger-val" style="min-width: 56px; text-align: right;">200ms</span>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">
+          <span>Layers (☑ to select, ⋮⋮ to reorder)</span>
+          <span class="section-actions">
+            <button class="link-btn" id="group-btn" disabled>Group</button>
+            <button class="link-btn" id="ungroup-btn" disabled>Reset</button>
+          </span>
+        </div>
+        <div class="layers-list" id="layers"><div class="empty">No layers yet</div></div>
+      </div>
+      <div class="controls">
+        <button id="play">▶ Preview</button>
+        <button id="render" class="primary">✓ Approve &amp; render</button>
+      </div>
+      <div class="progress" id="progress">
+        <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+        <div class="progress-label" id="progress-label">Rendering…</div>
+      </div>
+      <div class="download" id="download">
+        <a id="download-link" download="animation.webm">⬇ <span class="lbl">Download video</span></a>
+      </div>
+      <div class="meta" id="meta">
+        <span id="meta-layers">No SVG</span>
+        <span id="meta-duration"></span>
+      </div>
+    </div>
+  </div>
+  <p class="footnote">All processing happens in your browser. Nothing is uploaded anywhere.</p>
+</div>
+
+<script>
+(function(){
+  const g = id => document.getElementById(id);
+  const stage=g('stage'), drop=g('drop'), dropText=g('drop-text'), file=g('file');
+  const layersEl=g('layers'), playBtn=g('play'), renderBtn=g('render');
+  const metaLayers=g('meta-layers'), metaDuration=g('meta-duration');
+  const staggerSlider=g('stagger'), staggerVal=g('stagger-val');
+  const progressEl=g('progress'), barFill=g('bar-fill'), progressLabel=g('progress-label');
+  const downloadEl=g('download'), downloadLink=g('download-link');
+  const groupBtn=g('group-btn'), ungroupBtn=g('ungroup-btn');
+
+  let layers=[], originalLayers=[], svgEl=null, stagger=200, isRendering=false, baseFilename='animation';
+
+  drop.addEventListener('click', () => !isRendering && file.click());
+  drop.addEventListener('dragover', e => { if(isRendering) return; e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => {
+    if(isRendering) return;
+    e.preventDefault(); drop.classList.remove('over');
+    const f = e.dataTransfer.files[0]; if(f) readFile(f);
+  });
+  file.addEventListener('change', e => { if(e.target.files[0]) readFile(e.target.files[0]); });
+  staggerSlider.addEventListener('input', () => { stagger=+staggerSlider.value; staggerVal.textContent=stagger+'ms'; updateMeta(); });
+
+  function readFile(f){
+    baseFilename = f.name.replace(/\.svg$/i,'') || 'animation';
+    const r=new FileReader(); r.onload=()=>loadSVG(r.result,f.name); r.readAsText(f);
+  }
+
+  function loadSVG(text, filename){
+    const doc = new DOMParser().parseFromString(text,'image/svg+xml');
+    const svg = doc.querySelector('svg');
+    if(!svg){ metaLayers.textContent='Could not parse SVG'; return; }
+    stage.innerHTML=''; stage.appendChild(svg); svgEl=svg;
+    const skip = ['defs','title','desc','style','metadata','clipPath'];
+    let kids = Array.from(svg.children).filter(n => !skip.includes(n.tagName.toLowerCase()));
+    if(kids.length === 1 && kids[0].tagName.toLowerCase() === 'g'){
+      const inner = Array.from(kids[0].children).filter(n => !skip.includes(n.tagName.toLowerCase()));
+      if(inner.length > 1) kids = inner;
+    }
+    const rawLayers = kids.map((node,i) => createLayer([node], friendlyName(node,i)));
+    originalLayers = rawLayers.map(l => ({...l, nodes:[...l.nodes], selected:false}));
+    layers = autoBundle(rawLayers);
+    renderLayers(); resetStage();
+    drop.classList.add('compact'); dropText.textContent = filename || 'Replace SVG';
+    downloadEl.classList.remove('show'); progressEl.classList.remove('show');
+    ungroupBtn.disabled = (layers.length === originalLayers.length);
+    updateMeta();
+  }
+
+  function isPath(node){ return ['line','path','polyline'].includes((node.tagName||'').toLowerCase()); }
+
+  function createLayer(nodes, label){
+    const allPaths = nodes.every(isPath);
+    return {
+      id: 'l-' + Math.random().toString(36).slice(2,8),
+      nodes: [...nodes], label,
+      anim: allPaths ? 'draw' : 'fade-in',
+      duration: 400, selected: false
+    };
+  }
+
+  function friendlyName(node,i){
+    const dn = node.getAttribute('data-name') || node.getAttribute('inkscape:label'); if(dn) return dn;
+    const id = node.getAttribute('id'); if(id) return id;
+    const tag = node.tagName.toLowerCase();
+    const t = node.querySelector ? (node.querySelector('text')?.textContent?.trim()||'') : (node.textContent||'').trim();
+    if(t) return t.slice(0,30);
+    return tag+' '+(i+1);
+  }
+
+  function getNodeBBox(node){
+    try { if(node.getBBox){ const b=node.getBBox(); return {x:b.x,y:b.y,w:b.width,h:b.height}; } } catch(e){}
+    return {x:0,y:0,w:1,h:1};
+  }
+  function getLayerBBox(layer){
+    const bs = layer.nodes.map(getNodeBBox);
+    const x = Math.min(...bs.map(b=>b.x)), y = Math.min(...bs.map(b=>b.y));
+    const x2 = Math.max(...bs.map(b=>b.x+b.w)), y2 = Math.max(...bs.map(b=>b.y+b.h));
+    return {x, y, w:x2-x, h:y2-y};
+  }
+  function bboxOverlap(a,b,pad){
+    return !(a.x+a.w+pad < b.x || b.x+b.w+pad < a.x || a.y+a.h+pad < b.y || b.y+b.h+pad < a.y);
+  }
+
+  function pickClusterLabel(cluster){
+    for(const l of cluster){
+      for(const n of l.nodes){
+        const tag = (n.tagName||'').toLowerCase();
+        let t = '';
+        if(tag === 'text') t = (n.textContent||'').trim();
+        else if(n.querySelector) t = (n.querySelector('text')?.textContent||'').trim();
+        if(t && t.length > 1) return t.slice(0,30);
+      }
+    }
+    return cluster[0].label + ' +' + (cluster.length-1);
+  }
+
+  function autoBundle(rawLayers){
+    if(rawLayers.length <= 5) return rawLayers;
+    const vb = svgEl.viewBox && svgEl.viewBox.baseVal;
+    const vbw = (vb && vb.width) || 1000;
+    const vbh = (vb && vb.height) || 700;
+    const vbArea = vbw * vbh;
+    const PAD = Math.max(4, Math.round(vbw * 0.006));
+    const items = rawLayers.map((l,i) => {
+      const bbox = getNodeBBox(l.nodes[0]);
+      const area = Math.max(1, bbox.w * bbox.h);
+      const isBg = area > vbArea * 0.5;
+      if(isBg && (l.label === ('rect ' + (i+1)) || /^rect /i.test(l.label))) l.label = 'Background';
+      return { idx:i, bbox, area, isBg, layer:l };
+    });
+    const parent = items.map((_,i)=>i);
+    const find = x => parent[x]===x ? x : (parent[x]=find(parent[x]));
+    const union = (a,b) => { parent[find(a)]=find(b); };
+
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const ai = items[i], aj = items[j];
+        if(ai.isBg || aj.isBg) continue;
+        if(!bboxOverlap(ai.bbox, aj.bbox, PAD)) continue;
+        const ratio = Math.max(ai.area, aj.area) / Math.min(ai.area, aj.area);
+        if(ratio > 8) continue;
+        const aiPath = isPath(ai.layer.nodes[0]);
+        const ajPath = isPath(aj.layer.nodes[0]);
+        if(aiPath && ajPath) continue;
+        union(i,j);
+      }
+    }
+    const groups = {};
+    items.forEach((it,i) => { const r=find(i); (groups[r]=groups[r]||[]).push(it.layer); });
+    const clusters = Object.values(groups);
+    clusters.sort((a,b) => {
+      const ba = getLayerBBox({nodes: a.flatMap(l=>l.nodes)});
+      const bb = getLayerBBox({nodes: b.flatMap(l=>l.nodes)});
+      if(Math.abs(ba.y - bb.y) > 30) return ba.y - bb.y;
+      return ba.x - bb.x;
+    });
+    return clusters.map(cluster => {
+      if(cluster.length === 1) return cluster[0];
+      const allNodes = cluster.flatMap(l => l.nodes);
+      const label = pickClusterLabel(cluster);
+      return createLayer(allNodes, label);
+    });
+  }
+
+  function renderLayers(){
+    if(!layers.length){ layersEl.innerHTML='<div class="empty">No layers yet</div>'; updateGroupButtons(); return; }
+    layersEl.innerHTML='';
+    layers.forEach((l,idx) => {
+      const row=document.createElement('div');
+      row.className = 'row' + (l.selected ? ' selected' : '');
+      row.draggable=true; row.dataset.idx=idx;
+      const countLabel = l.nodes.length > 1 ? `<span class="count">(${l.nodes.length})</span>` : '';
+      row.innerHTML = `
+        <input type="checkbox" data-f="sel" ${l.selected?'checked':''}>
+        <span class="handle" aria-hidden="true">⋮⋮</span>
+        <span class="name" title="${esc(l.label)}">${esc(l.label)}${countLabel}</span>
+        <select data-f="anim">
+          <option value="fade-in" ${l.anim==='fade-in'?'selected':''}>Fade in</option>
+          <option value="slide-up" ${l.anim==='slide-up'?'selected':''}>Slide up</option>
+          <option value="slide-left" ${l.anim==='slide-left'?'selected':''}>Slide left</option>
+          <option value="slide-right" ${l.anim==='slide-right'?'selected':''}>Slide right</option>
+          <option value="scale-up" ${l.anim==='scale-up'?'selected':''}>Scale up</option>
+          <option value="draw" ${l.anim==='draw'?'selected':''}>Draw</option>
+        </select>
+        <input type="number" data-f="duration" min="100" max="3000" step="50" value="${l.duration}">`;
+      row.querySelector('[data-f="sel"]').addEventListener('change', e => {
+        l.selected = e.target.checked;
+        row.classList.toggle('selected', l.selected);
+        updateGroupButtons();
+      });
+      row.querySelector('[data-f="anim"]').addEventListener('change', e => { l.anim=e.target.value; updateMeta(); });
+      row.querySelector('[data-f="duration"]').addEventListener('change', e => { l.duration=+e.target.value||400; updateMeta(); });
+      row.addEventListener('dragstart', e => { row.classList.add('drag'); e.dataTransfer.setData('text/plain',idx); });
+      row.addEventListener('dragend', () => row.classList.remove('drag'));
+      row.addEventListener('dragover', e => e.preventDefault());
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        const from=+e.dataTransfer.getData('text/plain'), to=+row.dataset.idx;
+        if(from===to) return;
+        const moved=layers.splice(from,1)[0]; layers.splice(to,0,moved);
+        renderLayers(); updateMeta();
+      });
+      layersEl.appendChild(row);
+    });
+    updateGroupButtons();
+  }
+
+  function updateGroupButtons(){
+    const selCount = layers.filter(l=>l.selected).length;
+    groupBtn.disabled = selCount < 2;
+    groupBtn.textContent = selCount >= 2 ? `Group (${selCount})` : 'Group';
+    ungroupBtn.disabled = (layers.length === originalLayers.length);
+  }
+
+  groupBtn.addEventListener('click', () => {
+    const selected = layers.filter(l => l.selected);
+    if(selected.length < 2) return;
+    const allNodes = selected.flatMap(l => l.nodes);
+    const firstIdx = layers.indexOf(selected[0]);
+    const merged = createLayer(allNodes, selected[0].label + ' +' + (selected.length-1));
+    layers = layers.filter(l => !l.selected);
+    layers.splice(firstIdx, 0, merged);
+    renderLayers(); updateMeta();
+  });
+
+  ungroupBtn.addEventListener('click', () => {
+    layers = originalLayers.map(l => ({...l, nodes:[...l.nodes], selected:false}));
+    renderLayers(); resetStage(); updateMeta();
+  });
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function computeStarts(){ let t=0; return layers.map(()=>{ const s=t; t+=stagger; return s; }); }
+  function getTotalMs(){
+    const starts=computeStarts();
+    if(!starts.length) return 0;
+    return Math.max(...starts.map((s,i)=>s+layers[i].duration)) + 400;
+  }
+  function updateMeta(){
+    metaLayers.textContent = layers.length ? layers.length+' layers' : 'No SVG';
+    metaDuration.textContent = layers.length ? (getTotalMs()/1000).toFixed(1)+'s' : '';
+  }
+  const easeOut = p => 1 - Math.pow(1-p, 2);
+  function getStrokePaths(node){
+    const tag=(node.tagName||'').toLowerCase();
+    if(['line','path','polyline'].includes(tag)) return [node];
+    if(node.querySelectorAll) return Array.from(node.querySelectorAll('line, path, polyline'));
+    return [];
+  }
+
+  function applyLayerStateAt(layer, startMs, tMs){
+    const lt=tMs-startMs; let p=Math.max(0,Math.min(1, lt/layer.duration)); p=easeOut(p);
+    layer.nodes.forEach(n => {
+      n.style.transition='none';
+      if(layer.anim==='fade-in'){ n.style.opacity=p; n.style.transform='none'; }
+      else if(layer.anim==='slide-up'){ n.style.opacity=p; n.style.transform=`translateY(${(1-p)*25}px)`; }
+      else if(layer.anim==='slide-left'){ n.style.opacity=p; n.style.transform=`translateX(${(1-p)*-25}px)`; }
+      else if(layer.anim==='slide-right'){ n.style.opacity=p; n.style.transform=`translateX(${(1-p)*25}px)`; }
+      else if(layer.anim==='scale-up'){ n.style.opacity=p; n.style.transformOrigin='center'; n.style.transform=`scale(${0.85+p*0.15})`; }
+      else if(layer.anim==='draw'){
+        n.style.opacity=1; n.style.transform='none';
+        getStrokePaths(n).forEach(pa => {
+          try { const len=pa.__len||(pa.__len=(pa.getTotalLength?pa.getTotalLength():200));
+            pa.style.strokeDasharray=len; pa.style.strokeDashoffset=len*(1-p); } catch(e){}
+        });
+      }
+    });
+  }
+  function resetStage(){
+    layers.forEach(l => {
+      l.nodes.forEach(n => {
+        n.style.transition='none'; n.style.opacity='0'; n.style.transform='none';
+        getStrokePaths(n).forEach(pa => {
+          try { const len=pa.__len||(pa.__len=(pa.getTotalLength?pa.getTotalLength():200));
+            pa.style.strokeDasharray=len; pa.style.strokeDashoffset=len; } catch(e){}
+        });
+      });
+    });
+  }
+  function endStage(){
+    layers.forEach(l => {
+      l.nodes.forEach(n => {
+        n.style.opacity='1'; n.style.transform='none';
+        getStrokePaths(n).forEach(pa => { pa.style.strokeDashoffset=0; });
+      });
+    });
+  }
+  function playPreview(){
+    if(!layers.length || isRendering) return;
+    resetStage();
+    const starts=computeStarts(), total=getTotalMs(), t0=performance.now();
+    function tick(){
+      const t=performance.now()-t0;
+      if(t>total){ endStage(); return; }
+      layers.forEach((l,i)=>applyLayerStateAt(l,starts[i],t));
+      requestAnimationFrame(tick);
+    }
+    tick();
+  }
+  playBtn.addEventListener('click', playPreview);
+
+  function setRendering(b){
+    isRendering=b; renderBtn.disabled=b; playBtn.disabled=b;
+    drop.style.pointerEvents=b?'none':''; drop.style.opacity=b?'0.5':'1';
+  }
+  function pickMime(){
+    const list=['video/mp4;codecs=h264,aac','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+    for(const m of list){
+      if(typeof MediaRecorder!=='undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
+    }
+    return 'video/webm';
+  }
+  async function renderVideo(){
+    if(!layers.length || isRendering) return;
+    setRendering(true);
+    downloadEl.classList.remove('show');
+    progressEl.classList.add('show');
+    progressLabel.textContent='Preparing…'; barFill.style.width='0%';
+
+    const vb=svgEl.viewBox && svgEl.viewBox.baseVal;
+    const vbw=(vb&&vb.width)?vb.width:(+svgEl.getAttribute('width')||1126);
+    const vbh=(vb&&vb.height)?vb.height:(+svgEl.getAttribute('height')||712);
+    const ar=vbw/vbh;
+    let w=1920, h=Math.round(1920/ar);
+    if(h>1080){ h=1080; w=Math.round(1080*ar); }
+    w=Math.round(w/2)*2; h=Math.round(h/2)*2;
+
+    const canvas=document.createElement('canvas');
+    canvas.width=w; canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    const stream=canvas.captureStream(30);
+    const mime=pickMime();
+    const ext=mime.includes('mp4')?'mp4':'webm';
+    let recorder;
+    try { recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000}); }
+    catch(err){ progressLabel.textContent='Browser cannot record video'; setRendering(false); return; }
+    const chunks=[];
+    recorder.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+    const stopped=new Promise(r=>{ recorder.onstop=r; });
+
+    resetStage();
+    const starts=computeStarts(), total=getTotalMs();
+
+    async function paintAt(tMs){
+      layers.forEach((l,i)=>applyLayerStateAt(l,starts[i],tMs));
+      const c=svgEl.cloneNode(true);
+      c.setAttribute('width',w); c.setAttribute('height',h);
+      if(!c.getAttribute('xmlns')) c.setAttribute('xmlns','http://www.w3.org/2000/svg');
+      if(!c.getAttribute('viewBox') && vbw && vbh) c.setAttribute('viewBox',`0 0 ${vbw} ${vbh}`);
+      const xml=new XMLSerializer().serializeToString(c);
+      const dataUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
+      const img=new Image();
+      await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=dataUrl; }).catch(()=>{});
+      ctx.fillStyle='#EDF6FF'; ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+    }
+
+    await paintAt(0);
+    recorder.start();
+    progressLabel.textContent='Rendering frames…';
+    const t0=performance.now();
+    try {
+      while(true){
+        const elapsed=performance.now()-t0;
+        if(elapsed>total+200) break;
+        await paintAt(elapsed);
+        const pct=Math.min(96, Math.round((elapsed/total)*100));
+        barFill.style.width=pct+'%';
+        await new Promise(r=>requestAnimationFrame(r));
+      }
+      const hs=performance.now();
+      while(performance.now()-hs<500){
+        await paintAt(total);
+        await new Promise(r=>requestAnimationFrame(r));
+      }
+    } catch(err){ console.error(err); }
+
+    progressLabel.textContent='Finalizing…';
+    recorder.stop(); await stopped;
+    const blob=new Blob(chunks,{type:mime});
+    const url=URL.createObjectURL(blob);
+    const sizeMB=(blob.size/(1024*1024)).toFixed(1);
+    downloadLink.href=url;
+    downloadLink.download=baseFilename+'.'+ext;
+    downloadLink.innerHTML=`⬇ <span class="lbl">Download .${ext}</span> <span class="size">(${sizeMB} MB)</span>`;
+    barFill.style.width='100%';
+    progressLabel.textContent = ext==='mp4' ? 'Done · MP4 ready' : 'Done · WebM ready';
+    downloadEl.classList.add('show');
+    endStage();
+    setRendering(false);
+  }
+  renderBtn.addEventListener('click', renderVideo);
+  updateMeta();
+})();
+</script>
+</body>
+</html>
