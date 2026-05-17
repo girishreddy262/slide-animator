@@ -7,159 +7,234 @@
 <style>
   * { box-sizing: border-box; }
   :root {
-    --bg: #FAFAF7; --surface: #FFFFFF; --surface-2: #F3F2EE;
-    --border: rgba(0,0,0,0.1); --border-2: rgba(0,0,0,0.18);
-    --text: #1A1A1A; --text-2: #5F5F5F; --text-3: #9A9A9A;
-    --info: #185FA5; --info-bg: #E6F1FB; --info-border: rgba(24,95,165,0.3);
-    --radius-md: 8px; --radius-lg: 12px;
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F1F2F5;
+    --border: rgba(0,0,0,0.06);
+    --border-strong: rgba(0,0,0,0.1);
+    --text: #1F2328;
+    --text-2: #6B7280;
+    --text-3: #9CA3AF;
+    --accent: #185FA5;
+    --accent-soft: #E6F1FB;
+    --accent-hover: #D5E5F5;
+    --accent-bar: rgba(24, 95, 165, 0.18);
+    --accent-bar-strong: rgba(24, 95, 165, 0.32);
+    --stage-bg: #EDF6FF;
+    --playhead: #DC2626;
+    --radius: 10px;
+    --radius-sm: 6px;
   }
+  html, body { height: 100%; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
     background: var(--bg); color: var(--text);
-    margin: 0; padding: 24px; line-height: 1.5; font-size: 14px;
+    margin: 0; padding: 16px; line-height: 1.5; font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
   }
-  .app { max-width: 1100px; margin: 0 auto; }
-  .topbar { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
-  h1 { font-size: 20px; font-weight: 500; margin: 0; }
-  .topbar p { font-size: 12px; color: var(--text-3); margin: 0; }
-  .wrap { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
-  .stage { background: var(--surface-2); border-radius: var(--radius-lg); padding: 16px; min-height: 480px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .stage svg { max-width: 100%; max-height: 540px; }
-  .stage-empty { color: var(--text-3); font-size: 14px; text-align: center; padding: 40px; }
-  .panel { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px; }
-  .drop { border: 1px dashed var(--border-2); border-radius: var(--radius-md); padding: 20px 12px; text-align: center; font-size: 13px; color: var(--text-2); cursor: pointer; }
-  .drop.over { background: var(--info-bg); border-color: var(--info); color: var(--info); }
-  .drop.compact { padding: 10px 12px; font-size: 12px; }
-  .section { margin-top: 14px; }
-  .section-label { font-size: 11px; color: var(--text-3); margin-bottom: 6px; padding: 0 4px; display: flex; justify-content: space-between; align-items: center; }
-  .section-actions { display: flex; gap: 4px; }
-  .link-btn { background: none; border: none; color: var(--info); font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
-  .link-btn:hover { background: var(--info-bg); }
+  .app { max-width: 1280px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 14px; gap: 16px; flex-shrink: 0; }
+  .topbar .title-group { display: flex; align-items: baseline; gap: 12px; min-width: 0; flex: 1; }
+  .topbar h1 { font-size: 15px; font-weight: 500; margin: 0; letter-spacing: -0.01em; white-space: nowrap; }
+  .topbar .filename { color: var(--text-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .upload-row { display: flex; gap: 8px; flex-shrink: 0; }
+  .upload-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 7px 14px; border-radius: 100px; background: var(--accent-soft); color: var(--accent); cursor: pointer; border: 0.5px solid transparent; transition: all 0.15s; font-weight: 500; }
+  .upload-pill:hover { background: var(--accent-hover); }
+  .upload-pill.over { background: var(--accent-hover); border-color: var(--accent); }
+  .upload-pill.has-file { background: var(--surface); color: var(--text-2); border-color: var(--border-strong); }
+  .upload-pill .icon { font-size: 13px; line-height: 1; }
+  .workspace { display: grid; grid-template-columns: 1fr 280px; gap: 12px; flex-shrink: 0; }
+  .stage { background: var(--stage-bg); border-radius: var(--radius); padding: 16px; height: 380px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .stage svg { max-width: 100%; max-height: 100%; }
+  .stage-empty { color: var(--text-3); font-size: 13px; text-align: center; padding: 40px 20px; }
+  .sidebar { background: var(--surface); border-radius: var(--radius); padding: 14px; height: 380px; display: flex; flex-direction: column; }
+  .side-label { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-3); margin-bottom: 8px; padding: 0 2px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; }
+  .side-actions { display: flex; gap: 2px; text-transform: none; letter-spacing: 0; }
+  .link-btn { background: none; border: none; color: var(--accent); font-size: 11px; cursor: pointer; padding: 3px 6px; border-radius: 4px; font-weight: 500; }
+  .link-btn:hover { background: var(--accent-soft); }
   .link-btn:disabled { color: var(--text-3); cursor: not-allowed; }
   .link-btn:disabled:hover { background: none; }
-  .stagger { display: flex; align-items: center; gap: 10px; font-size: 12px; padding: 0 4px; }
-  .stagger input { flex: 1; }
-  .layers-list { max-height: 320px; overflow-y: auto; padding-right: 4px; }
-  .row { display: grid; grid-template-columns: 16px 14px 1fr 84px 50px; gap: 6px; align-items: center; padding: 4px; border-radius: var(--radius-md); font-size: 12px; }
-  .row:hover { background: var(--surface-2); }
-  .row.selected { background: var(--info-bg); }
-  .row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .row .count { font-size: 10px; color: var(--text-3); margin-left: 4px; }
-  .row select, .row input[type=number] { height: 26px; font-size: 11px; padding: 0 4px; border: 0.5px solid var(--border-2); border-radius: 4px; background: var(--surface); color: var(--text); }
-  .row input[type=checkbox] { margin: 0; width: 14px; height: 14px; cursor: pointer; }
-  .handle { cursor: grab; color: var(--text-3); font-size: 13px; user-select: none; text-align: center; }
-  .row.drag { opacity: 0.4; }
-  .controls { display: flex; gap: 6px; margin-top: 12px; }
-  .controls button { font-size: 12px; padding: 8px 10px; height: 34px; flex: 1; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-2); border-radius: var(--radius-md); cursor: pointer; }
-  .controls button:hover { background: var(--surface-2); }
-  .controls button:active { transform: scale(0.98); }
-  .controls button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .controls .primary { background: var(--info-bg); color: var(--info); border-color: var(--info-border); }
-  .controls .primary:hover { background: #D5E5F5; }
-  .empty { color: var(--text-3); font-size: 12px; text-align: center; padding: 18px 0; }
-  .meta { font-size: 11px; color: var(--text-3); margin-top: 12px; padding-top: 10px; border-top: 0.5px solid var(--border); display: flex; justify-content: space-between; }
-  .progress { display: none; margin-top: 12px; }
-  .progress.show { display: block; }
-  .bar { width: 100%; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
-  .bar-fill { height: 100%; background: var(--info); width: 0%; transition: width 0.1s linear; }
+  .layers-list { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .layers-list::-webkit-scrollbar { width: 6px; }
+  .layers-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  .lrow { display: grid; grid-template-columns: 14px 1fr 86px; gap: 6px; align-items: center; padding: 5px 4px; border-radius: var(--radius-sm); font-size: 11.5px; transition: background 0.1s; }
+  .lrow:hover { background: var(--bg); }
+  .lrow.selected { background: var(--accent-soft); }
+  .lrow .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lrow .count { font-size: 10px; color: var(--text-3); margin-left: 4px; }
+  .lrow select { height: 26px; font-size: 11px; padding: 0 4px; border: 0.5px solid var(--border-strong); border-radius: 4px; background: var(--surface); color: var(--text); width: 100%; }
+  .lrow input[type=checkbox] { margin: 0; width: 12px; height: 12px; cursor: pointer; accent-color: var(--accent); }
+  .empty { color: var(--text-3); font-size: 12px; text-align: center; padding: 24px 0; }
+
+  .timeline-panel { margin-top: 12px; background: var(--surface); border-radius: var(--radius); padding: 12px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .tl-controls { display: flex; align-items: center; gap: 10px; padding: 0 4px 10px; flex-wrap: wrap; flex-shrink: 0; }
+  .tl-controls .play-btn { width: 36px; height: 32px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--surface); cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
+  .tl-controls .play-btn:hover { background: var(--bg); }
+  .tl-controls .time { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 110px; }
+  .tl-controls .time .total { color: var(--text-3); }
+  .tl-controls .spacer { flex: 1; }
+  .tl-controls .stagger-mini { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-2); }
+  .tl-controls .stagger-mini input[type=number] { width: 60px; height: 28px; font-size: 11px; padding: 0 6px; border: 0.5px solid var(--border-strong); border-radius: 4px; background: var(--surface); }
+  .btn { font-size: 12.5px; padding: 0 14px; height: 32px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; font-weight: 500; }
+  .btn:hover { background: var(--bg); border-color: var(--text-3); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.primary { background: #0183FF; color: #fff; border-color: #0183FF; }
+  .btn.primary:hover { background: #006FDB; border-color: #006FDB; }
+
+  .tl-scroll { overflow: auto; border-radius: var(--radius-sm); background: var(--surface-2); flex: 1; min-height: 60px; }
+  .tl-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+  .tl-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+  .timeline { position: relative; min-width: 100%; user-select: none; padding: 0 14px 8px; }
+  .ruler { position: relative; height: 22px; border-bottom: 0.5px solid var(--border-strong); }
+  .ruler .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+  .ruler .tick.major { background: var(--border-strong); }
+  .ruler .tick-label { position: absolute; top: 4px; font-size: 10px; color: var(--text-3); font-variant-numeric: tabular-nums; transform: translateX(-50%); white-space: nowrap; }
+  .audio-track { position: relative; height: 36px; margin-top: 4px; border-radius: 4px; background: var(--bg); overflow: hidden; }
+  .audio-track.has-audio { background: var(--accent-soft); }
+  .audio-track canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .audio-track .audio-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10.5px; color: var(--text-3); }
+  .tracks { position: relative; margin-top: 8px; }
+  .track-row { position: relative; height: 24px; border-radius: 4px; }
+  .track-row:nth-child(odd) { background: rgba(0,0,0,0.015); }
+  .layer-bar { position: absolute; top: 3px; bottom: 3px; background: var(--accent-bar); border: 0.5px solid var(--accent-bar-strong); border-radius: 4px; cursor: grab; display: flex; align-items: center; padding: 0 8px; overflow: hidden; transition: background 0.1s, border-color 0.1s; min-width: 16px; }
+  .layer-bar:hover { background: var(--accent-bar-strong); }
+  .layer-bar.selected { background: var(--accent); border-color: var(--accent); }
+  .layer-bar.selected .bar-label { color: #fff; }
+  .layer-bar.dragging { cursor: grabbing; background: var(--accent); border-color: var(--accent); color: #fff; z-index: 30; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: none; }
+  .layer-bar.dragging .bar-label { color: #fff; }
+  .layer-bar .bar-label { font-size: 10.5px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; font-weight: 500; }
+  .layer-bar .resize-handle { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: ew-resize; }
+  .playhead { position: absolute; top: 0; bottom: 0; width: 1.5px; background: var(--playhead); pointer-events: none; z-index: 20; }
+  .playhead::before { content: ''; position: absolute; top: -2px; left: -5px; width: 12px; height: 12px; background: var(--playhead); border-radius: 50%; }
+
+  .status-area { padding: 8px 4px 0; flex-shrink: 0; }
+  .progress { display: none; }
+  .progress.show { display: block; margin-top: 6px; }
+  .bar { width: 100%; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+  .bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s linear; }
   .progress-label { font-size: 11px; color: var(--text-2); }
-  .download { display: none; margin-top: 12px; }
+  .download { display: none; margin-top: 10px; }
   .download.show { display: block; }
-  .download a { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--info); text-decoration: none; padding: 12px; border: 0.5px solid var(--info-border); border-radius: var(--radius-md); background: var(--info-bg); }
-  .download a .size { font-size: 11px; opacity: 0.7; }
+  .download a { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--accent); text-decoration: none; padding: 8px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); font-weight: 500; }
+  .download a:hover { background: var(--accent-hover); }
+  .download a .size { color: var(--text-3); font-weight: 400; font-variant-numeric: tabular-nums; }
   .footnote { font-size: 11px; color: var(--text-3); margin-top: 16px; text-align: center; }
-  .tip { font-size: 11px; color: var(--text-2); background: var(--surface-2); padding: 8px 10px; border-radius: var(--radius-md); margin-top: 10px; line-height: 1.4; }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topbar">
-    <h1>Darwinbox slide animator</h1>
-    <p>Upload, arrange, approve, download</p>
+    <div class="title-group">
+      <h1>Darwinbox slide animator</h1>
+      <span class="filename" id="filename"></span>
+    </div>
+    <div class="upload-row">
+      <div class="upload-pill" id="drop-svg">
+        <span class="icon">↑</span><span id="svg-label">Upload SVG</span>
+      </div>
+      <div class="upload-pill" id="drop-audio">
+        <span class="icon">♪</span><span id="audio-label">Upload audio</span>
+      </div>
+      <input type="file" id="file-svg" accept=".svg,image/svg+xml" style="display:none;">
+      <input type="file" id="file-audio" accept="audio/*" style="display:none;">
+    </div>
   </div>
-  <div class="wrap">
+
+  <div class="workspace">
     <div class="stage" id="stage">
-      <div class="stage-empty" id="stage-empty">
-        Drop an SVG on the right to begin.<br>
-        <span style="font-size:12px; color: var(--text-3);">Tip: in Figma, use Frames (F) per logical unit before exporting.</span>
-      </div>
+      <div class="stage-empty" id="stage-empty">Upload an SVG to begin.</div>
     </div>
-    <div class="panel">
-      <div class="drop" id="drop">
-        <div style="font-size:18px; margin-bottom:4px;">↑</div>
-        <span id="drop-text">Drop SVG file or click</span>
+    <div class="sidebar">
+      <div class="side-label">
+        <span>Layers</span>
+        <span class="side-actions">
+          <button class="link-btn" id="group-btn" disabled>Group</button>
+          <button class="link-btn" id="ungroup-btn" disabled>Reset</button>
+        </span>
       </div>
-      <input type="file" id="file" accept=".svg,image/svg+xml" style="display:none;">
-      <div class="section">
-        <div class="section-label">Stagger between layers</div>
-        <div class="stagger">
-          <input type="range" id="stagger" min="0" max="800" step="50" value="200">
-          <span id="stagger-val" style="min-width: 56px; text-align: right;">200ms</span>
+      <div class="layers-list" id="layers"><div class="empty">No layers yet</div></div>
+    </div>
+  </div>
+
+  <div class="timeline-panel">
+    <div class="tl-controls">
+      <button class="play-btn" id="play-btn" title="Play / Pause">▶</button>
+      <span class="time"><span id="cur-time">0:00.00</span> <span class="total">/ <span id="total-time">0:00.00</span></span></span>
+      <span class="spacer"></span>
+      <span class="stagger-mini">
+        Stagger <input type="number" id="stagger" min="0" max="2000" step="50" value="200">ms
+        <button class="link-btn" id="auto-btn" disabled>Auto-distribute</button>
+      </span>
+      <button class="btn primary" id="render">✓ Render</button>
+    </div>
+    <div class="tl-scroll" id="tl-scroll">
+      <div class="timeline" id="timeline">
+        <div class="ruler" id="ruler"></div>
+        <div class="audio-track" id="audio-track">
+          <div class="audio-empty" id="audio-empty">No audio loaded</div>
         </div>
-      </div>
-      <div class="section">
-        <div class="section-label">
-          <span>Layers (☑ to select, ⋮⋮ to reorder)</span>
-          <span class="section-actions">
-            <button class="link-btn" id="group-btn" disabled>Group</button>
-            <button class="link-btn" id="ungroup-btn" disabled>Reset</button>
-          </span>
-        </div>
-        <div class="layers-list" id="layers"><div class="empty">No layers yet</div></div>
-      </div>
-      <div class="controls">
-        <button id="play">▶ Preview</button>
-        <button id="render" class="primary">✓ Approve &amp; render</button>
-      </div>
-      <div class="progress" id="progress">
-        <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
-        <div class="progress-label" id="progress-label">Rendering…</div>
-      </div>
-      <div class="download" id="download">
-        <a id="download-link" download="animation.webm">⬇ <span class="lbl">Download video</span></a>
-      </div>
-      <div class="meta" id="meta">
-        <span id="meta-layers">No SVG</span>
-        <span id="meta-duration"></span>
+        <div class="tracks" id="tracks"></div>
+        <div class="playhead" id="playhead" style="left: 14px;"></div>
       </div>
     </div>
   </div>
-  <p class="footnote">All processing happens in your browser. Nothing is uploaded anywhere.</p>
+
+  <div class="status-area">
+    <div class="progress" id="progress">
+      <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+      <div class="progress-label" id="progress-label">Rendering…</div>
+    </div>
+    <div class="download" id="download">
+      <a id="download-link" download="animation.webm">⬇ <span class="lbl">Download</span></a>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
   const g = id => document.getElementById(id);
-  const stage=g('stage'), drop=g('drop'), dropText=g('drop-text'), file=g('file');
-  const layersEl=g('layers'), playBtn=g('play'), renderBtn=g('render');
-  const metaLayers=g('meta-layers'), metaDuration=g('meta-duration');
-  const staggerSlider=g('stagger'), staggerVal=g('stagger-val');
+  const stage=g('stage'), dropSvg=g('drop-svg'), svgLabel=g('svg-label'), fileSvg=g('file-svg');
+  const dropAudio=g('drop-audio'), audioLabel=g('audio-label'), fileAudio=g('file-audio');
+  const filenameEl=g('filename'), layersEl=g('layers');
+  const playBtn=g('play-btn'), renderBtn=g('render'), autoBtn=g('auto-btn');
+  const staggerInput=g('stagger');
+  const groupBtn=g('group-btn'), ungroupBtn=g('ungroup-btn');
+  const curTimeEl=g('cur-time'), totalTimeEl=g('total-time');
+  const tlScroll=g('tl-scroll'), timelineEl=g('timeline');
+  const rulerEl=g('ruler'), audioTrackEl=g('audio-track'), audioEmptyEl=g('audio-empty');
+  const tracksEl=g('tracks'), playheadEl=g('playhead');
   const progressEl=g('progress'), barFill=g('bar-fill'), progressLabel=g('progress-label');
   const downloadEl=g('download'), downloadLink=g('download-link');
-  const groupBtn=g('group-btn'), ungroupBtn=g('ungroup-btn');
 
-  let layers=[], originalLayers=[], svgEl=null, stagger=200, isRendering=false, baseFilename='animation';
+  let layers=[], originalLayers=[], svgEl=null, baseFilename='animation';
+  let audioEl=null, audioDuration=0, audioBuffer=null;
+  let pxPerSec=120;
+  const TIMELINE_LEFT_PAD=14;
+  let playheadMs=0, isPlaying=false, isRendering=false;
+  let rafId=null;
 
-  drop.addEventListener('click', () => !isRendering && file.click());
-  drop.addEventListener('dragover', e => { if(isRendering) return; e.preventDefault(); drop.classList.add('over'); });
-  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
-  drop.addEventListener('drop', e => {
-    if(isRendering) return;
-    e.preventDefault(); drop.classList.remove('over');
-    const f = e.dataTransfer.files[0]; if(f) readFile(f);
-  });
-  file.addEventListener('change', e => { if(e.target.files[0]) readFile(e.target.files[0]); });
-  staggerSlider.addEventListener('input', () => { stagger=+staggerSlider.value; staggerVal.textContent=stagger+'ms'; updateMeta(); });
+  function fmt(ms){ if(!isFinite(ms)||ms<0) ms=0; const s=ms/1000; const m=Math.floor(s/60); const r=s-m*60; return m+':'+r.toFixed(2).padStart(5,'0'); }
+  function msToPx(ms){ return TIMELINE_LEFT_PAD + (ms/1000)*pxPerSec; }
+  function pxToMs(px){ return Math.max(0, ((px - TIMELINE_LEFT_PAD)/pxPerSec)*1000); }
+  function snap(ms){ return Math.round(ms/50)*50; }
 
-  function readFile(f){
-    baseFilename = f.name.replace(/\.svg$/i,'') || 'animation';
-    const r=new FileReader(); r.onload=()=>loadSVG(r.result,f.name); r.readAsText(f);
-  }
+  dropSvg.addEventListener('click', () => !isRendering && fileSvg.click());
+  dropSvg.addEventListener('dragover', e => { if(isRendering) return; e.preventDefault(); dropSvg.classList.add('over'); });
+  dropSvg.addEventListener('dragleave', () => dropSvg.classList.remove('over'));
+  dropSvg.addEventListener('drop', e => { if(isRendering) return; e.preventDefault(); dropSvg.classList.remove('over'); const f=e.dataTransfer.files[0]; if(f) readSVG(f); });
+  fileSvg.addEventListener('change', e => { if(e.target.files[0]) readSVG(e.target.files[0]); });
+  dropAudio.addEventListener('click', () => !isRendering && fileAudio.click());
+  dropAudio.addEventListener('dragover', e => { e.preventDefault(); dropAudio.classList.add('over'); });
+  dropAudio.addEventListener('dragleave', () => dropAudio.classList.remove('over'));
+  dropAudio.addEventListener('drop', e => { e.preventDefault(); dropAudio.classList.remove('over'); const f=e.dataTransfer.files[0]; if(f) readAudio(f); });
+  fileAudio.addEventListener('change', e => { if(e.target.files[0]) readAudio(e.target.files[0]); });
 
+  function readSVG(f){ baseFilename = f.name.replace(/\.svg$/i,'') || 'animation'; const r=new FileReader(); r.onload=()=>loadSVG(r.result,f.name); r.readAsText(f); }
   function loadSVG(text, filename){
     const doc = new DOMParser().parseFromString(text,'image/svg+xml');
     const svg = doc.querySelector('svg');
-    if(!svg){ metaLayers.textContent='Could not parse SVG'; return; }
+    if(!svg){ filenameEl.textContent='Could not parse SVG'; return; }
     stage.innerHTML=''; stage.appendChild(svg); svgEl=svg;
     const skip = ['defs','title','desc','style','metadata','clipPath'];
     let kids = Array.from(svg.children).filter(n => !skip.includes(n.tagName.toLowerCase()));
@@ -168,27 +243,22 @@
       if(inner.length > 1) kids = inner;
     }
     const rawLayers = kids.map((node,i) => createLayer([node], friendlyName(node,i)));
-    originalLayers = rawLayers.map(l => ({...l, nodes:[...l.nodes], selected:false}));
+    originalLayers = rawLayers.map(l => ({...l, nodes:[...l.nodes], selected:false, startMs:l.startMs}));
     layers = autoBundle(rawLayers);
-    renderLayers(); resetStage();
-    drop.classList.add('compact'); dropText.textContent = filename || 'Replace SVG';
+    distributeStarts(+staggerInput.value || 200);
+    svgLabel.textContent = filename || 'Replace SVG';
+    dropSvg.classList.add('has-file');
+    filenameEl.textContent = filename ? '· ' + filename : '';
     downloadEl.classList.remove('show'); progressEl.classList.remove('show');
+    autoBtn.disabled = false;
     ungroupBtn.disabled = (layers.length === originalLayers.length);
-    updateMeta();
+    renderLayers(); renderTimeline(); resetStage(); setPlayhead(0);
   }
-
   function isPath(node){ return ['line','path','polyline'].includes((node.tagName||'').toLowerCase()); }
-
   function createLayer(nodes, label){
     const allPaths = nodes.every(isPath);
-    return {
-      id: 'l-' + Math.random().toString(36).slice(2,8),
-      nodes: [...nodes], label,
-      anim: allPaths ? 'draw' : 'fade-in',
-      duration: 400, selected: false
-    };
+    return { id: 'l-'+Math.random().toString(36).slice(2,8), nodes:[...nodes], label, anim: allPaths?'draw':'fade-in', duration:400, startMs:0, selected:false };
   }
-
   function friendlyName(node,i){
     const dn = node.getAttribute('data-name') || node.getAttribute('inkscape:label'); if(dn) return dn;
     const id = node.getAttribute('id'); if(id) return id;
@@ -197,93 +267,55 @@
     if(t) return t.slice(0,30);
     return tag+' '+(i+1);
   }
-
-  function getNodeBBox(node){
-    try { if(node.getBBox){ const b=node.getBBox(); return {x:b.x,y:b.y,w:b.width,h:b.height}; } } catch(e){}
-    return {x:0,y:0,w:1,h:1};
-  }
-  function getLayerBBox(layer){
-    const bs = layer.nodes.map(getNodeBBox);
-    const x = Math.min(...bs.map(b=>b.x)), y = Math.min(...bs.map(b=>b.y));
-    const x2 = Math.max(...bs.map(b=>b.x+b.w)), y2 = Math.max(...bs.map(b=>b.y+b.h));
-    return {x, y, w:x2-x, h:y2-y};
-  }
-  function bboxOverlap(a,b,pad){
-    return !(a.x+a.w+pad < b.x || b.x+b.w+pad < a.x || a.y+a.h+pad < b.y || b.y+b.h+pad < a.y);
-  }
-
+  function getNodeBBox(node){ try { if(node.getBBox){ const b=node.getBBox(); return {x:b.x,y:b.y,w:b.width,h:b.height}; } } catch(e){} return {x:0,y:0,w:1,h:1}; }
+  function getLayerBBox(layer){ const bs=layer.nodes.map(getNodeBBox); const x=Math.min(...bs.map(b=>b.x)), y=Math.min(...bs.map(b=>b.y)); const x2=Math.max(...bs.map(b=>b.x+b.w)), y2=Math.max(...bs.map(b=>b.y+b.h)); return {x,y,w:x2-x,h:y2-y}; }
+  function bboxOverlap(a,b,pad){ return !(a.x+a.w+pad<b.x || b.x+b.w+pad<a.x || a.y+a.h+pad<b.y || b.y+b.h+pad<a.y); }
   function pickClusterLabel(cluster){
-    for(const l of cluster){
-      for(const n of l.nodes){
-        const tag = (n.tagName||'').toLowerCase();
-        let t = '';
-        if(tag === 'text') t = (n.textContent||'').trim();
-        else if(n.querySelector) t = (n.querySelector('text')?.textContent||'').trim();
-        if(t && t.length > 1) return t.slice(0,30);
-      }
-    }
+    for(const l of cluster){ for(const n of l.nodes){ const tag=(n.tagName||'').toLowerCase(); let t=''; if(tag==='text') t=(n.textContent||'').trim(); else if(n.querySelector) t=(n.querySelector('text')?.textContent||'').trim(); if(t && t.length>1) return t.slice(0,28); } }
     return cluster[0].label + ' +' + (cluster.length-1);
   }
-
   function autoBundle(rawLayers){
     if(rawLayers.length <= 5) return rawLayers;
     const vb = svgEl.viewBox && svgEl.viewBox.baseVal;
-    const vbw = (vb && vb.width) || 1000;
-    const vbh = (vb && vb.height) || 700;
-    const vbArea = vbw * vbh;
-    const PAD = Math.max(4, Math.round(vbw * 0.006));
+    const vbw = (vb && vb.width) || 1000; const vbh = (vb && vb.height) || 700;
+    const vbArea = vbw * vbh; const PAD = Math.max(4, Math.round(vbw * 0.006));
     const items = rawLayers.map((l,i) => {
-      const bbox = getNodeBBox(l.nodes[0]);
-      const area = Math.max(1, bbox.w * bbox.h);
+      const bbox = getNodeBBox(l.nodes[0]); const area = Math.max(1, bbox.w*bbox.h);
       const isBg = area > vbArea * 0.5;
-      if(isBg && (l.label === ('rect ' + (i+1)) || /^rect /i.test(l.label))) l.label = 'Background';
+      if(isBg && /^rect /i.test(l.label)) l.label = 'Background';
       return { idx:i, bbox, area, isBg, layer:l };
     });
     const parent = items.map((_,i)=>i);
     const find = x => parent[x]===x ? x : (parent[x]=find(parent[x]));
     const union = (a,b) => { parent[find(a)]=find(b); };
-
-    for(let i=0;i<items.length;i++){
-      for(let j=i+1;j<items.length;j++){
-        const ai = items[i], aj = items[j];
-        if(ai.isBg || aj.isBg) continue;
-        if(!bboxOverlap(ai.bbox, aj.bbox, PAD)) continue;
-        const ratio = Math.max(ai.area, aj.area) / Math.min(ai.area, aj.area);
-        if(ratio > 8) continue;
-        const aiPath = isPath(ai.layer.nodes[0]);
-        const ajPath = isPath(aj.layer.nodes[0]);
-        if(aiPath && ajPath) continue;
-        union(i,j);
-      }
-    }
+    for(let i=0;i<items.length;i++){ for(let j=i+1;j<items.length;j++){
+      const ai=items[i], aj=items[j];
+      if(ai.isBg || aj.isBg) continue;
+      if(!bboxOverlap(ai.bbox, aj.bbox, PAD)) continue;
+      const ratio = Math.max(ai.area, aj.area) / Math.min(ai.area, aj.area);
+      if(ratio > 8) continue;
+      if(isPath(ai.layer.nodes[0]) && isPath(aj.layer.nodes[0])) continue;
+      union(i,j);
+    } }
     const groups = {};
     items.forEach((it,i) => { const r=find(i); (groups[r]=groups[r]||[]).push(it.layer); });
     const clusters = Object.values(groups);
-    clusters.sort((a,b) => {
-      const ba = getLayerBBox({nodes: a.flatMap(l=>l.nodes)});
-      const bb = getLayerBBox({nodes: b.flatMap(l=>l.nodes)});
-      if(Math.abs(ba.y - bb.y) > 30) return ba.y - bb.y;
-      return ba.x - bb.x;
-    });
-    return clusters.map(cluster => {
-      if(cluster.length === 1) return cluster[0];
-      const allNodes = cluster.flatMap(l => l.nodes);
-      const label = pickClusterLabel(cluster);
-      return createLayer(allNodes, label);
-    });
+    clusters.sort((a,b) => { const ba=getLayerBBox({nodes:a.flatMap(l=>l.nodes)}); const bb=getLayerBBox({nodes:b.flatMap(l=>l.nodes)}); if(Math.abs(ba.y-bb.y)>30) return ba.y-bb.y; return ba.x-bb.x; });
+    return clusters.map(cluster => { if(cluster.length===1) return cluster[0]; const allNodes=cluster.flatMap(l=>l.nodes); return createLayer(allNodes, pickClusterLabel(cluster)); });
   }
+
+  function distributeStarts(stag){ let t=0; layers.forEach(l => { l.startMs = t; t += stag; }); }
+  autoBtn.addEventListener('click', () => { distributeStarts(+staggerInput.value || 200); renderTimeline(); updateTimes(); });
 
   function renderLayers(){
     if(!layers.length){ layersEl.innerHTML='<div class="empty">No layers yet</div>'; updateGroupButtons(); return; }
     layersEl.innerHTML='';
     layers.forEach((l,idx) => {
       const row=document.createElement('div');
-      row.className = 'row' + (l.selected ? ' selected' : '');
-      row.draggable=true; row.dataset.idx=idx;
+      row.className='lrow'+(l.selected?' selected':''); row.dataset.idx=idx;
       const countLabel = l.nodes.length > 1 ? `<span class="count">(${l.nodes.length})</span>` : '';
       row.innerHTML = `
         <input type="checkbox" data-f="sel" ${l.selected?'checked':''}>
-        <span class="handle" aria-hidden="true">⋮⋮</span>
         <span class="name" title="${esc(l.label)}">${esc(l.label)}${countLabel}</span>
         <select data-f="anim">
           <option value="fade-in" ${l.anim==='fade-in'?'selected':''}>Fade in</option>
@@ -292,72 +324,177 @@
           <option value="slide-right" ${l.anim==='slide-right'?'selected':''}>Slide right</option>
           <option value="scale-up" ${l.anim==='scale-up'?'selected':''}>Scale up</option>
           <option value="draw" ${l.anim==='draw'?'selected':''}>Draw</option>
-        </select>
-        <input type="number" data-f="duration" min="100" max="3000" step="50" value="${l.duration}">`;
+        </select>`;
       row.querySelector('[data-f="sel"]').addEventListener('change', e => {
-        l.selected = e.target.checked;
+        l.selected=e.target.checked;
         row.classList.toggle('selected', l.selected);
+        const tBar = tracksEl.querySelector(`.layer-bar[data-idx="${idx}"]`);
+        if(tBar) tBar.classList.toggle('selected', l.selected);
         updateGroupButtons();
       });
-      row.querySelector('[data-f="anim"]').addEventListener('change', e => { l.anim=e.target.value; updateMeta(); });
-      row.querySelector('[data-f="duration"]').addEventListener('change', e => { l.duration=+e.target.value||400; updateMeta(); });
-      row.addEventListener('dragstart', e => { row.classList.add('drag'); e.dataTransfer.setData('text/plain',idx); });
-      row.addEventListener('dragend', () => row.classList.remove('drag'));
-      row.addEventListener('dragover', e => e.preventDefault());
-      row.addEventListener('drop', e => {
-        e.preventDefault();
-        const from=+e.dataTransfer.getData('text/plain'), to=+row.dataset.idx;
-        if(from===to) return;
-        const moved=layers.splice(from,1)[0]; layers.splice(to,0,moved);
-        renderLayers(); updateMeta();
-      });
+      row.querySelector('[data-f="anim"]').addEventListener('change', e => { l.anim=e.target.value; });
       layersEl.appendChild(row);
     });
     updateGroupButtons();
   }
-
   function updateGroupButtons(){
-    const selCount = layers.filter(l=>l.selected).length;
-    groupBtn.disabled = selCount < 2;
-    groupBtn.textContent = selCount >= 2 ? `Group (${selCount})` : 'Group';
+    const sel = layers.filter(l=>l.selected).length;
+    groupBtn.disabled = sel < 2; groupBtn.textContent = sel >= 2 ? `Group (${sel})` : 'Group';
     ungroupBtn.disabled = (layers.length === originalLayers.length);
   }
-
   groupBtn.addEventListener('click', () => {
-    const selected = layers.filter(l => l.selected);
-    if(selected.length < 2) return;
-    const allNodes = selected.flatMap(l => l.nodes);
-    const firstIdx = layers.indexOf(selected[0]);
+    const selected = layers.filter(l=>l.selected); if(selected.length<2) return;
+    const allNodes = selected.flatMap(l=>l.nodes); const firstIdx = layers.indexOf(selected[0]);
     const merged = createLayer(allNodes, selected[0].label + ' +' + (selected.length-1));
-    layers = layers.filter(l => !l.selected);
-    layers.splice(firstIdx, 0, merged);
-    renderLayers(); updateMeta();
+    merged.startMs = selected[0].startMs; merged.duration = selected[0].duration;
+    layers = layers.filter(l=>!l.selected); layers.splice(firstIdx, 0, merged);
+    renderLayers(); renderTimeline(); updateTimes();
   });
-
   ungroupBtn.addEventListener('click', () => {
-    layers = originalLayers.map(l => ({...l, nodes:[...l.nodes], selected:false}));
-    renderLayers(); resetStage(); updateMeta();
+    layers = originalLayers.map(l => ({...l, nodes:[...l.nodes], selected:false, startMs:l.startMs||0}));
+    distributeStarts(+staggerInput.value || 200);
+    renderLayers(); renderTimeline(); resetStage(); updateTimes();
   });
 
-  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-  function computeStarts(){ let t=0; return layers.map(()=>{ const s=t; t+=stagger; return s; }); }
   function getTotalMs(){
-    const starts=computeStarts();
-    if(!starts.length) return 0;
-    return Math.max(...starts.map((s,i)=>s+layers[i].duration)) + 400;
+    let maxEnd = 0;
+    layers.forEach(l => { maxEnd = Math.max(maxEnd, l.startMs + l.duration); });
+    if(audioDuration > 0) maxEnd = Math.max(maxEnd, audioDuration * 1000);
+    return Math.max(1000, maxEnd + 300);
   }
-  function updateMeta(){
-    metaLayers.textContent = layers.length ? layers.length+' layers' : 'No SVG';
-    metaDuration.textContent = layers.length ? (getTotalMs()/1000).toFixed(1)+'s' : '';
+  function getLastLayerEnd(){
+    if(!layers.length) return 0;
+    return Math.max(...layers.map(l => l.startMs + l.duration));
   }
-  const easeOut = p => 1 - Math.pow(1-p, 2);
-  function getStrokePaths(node){
-    const tag=(node.tagName||'').toLowerCase();
-    if(['line','path','polyline'].includes(tag)) return [node];
-    if(node.querySelectorAll) return Array.from(node.querySelectorAll('line, path, polyline'));
-    return [];
+  function updateTimes(){
+    totalTimeEl.textContent = fmt(getTotalMs());
+    curTimeEl.textContent = fmt(playheadMs);
   }
 
+  function renderTimeline(){
+    const total = getTotalMs();
+    const widthPx = msToPx(total) + 20;
+    timelineEl.style.width = widthPx + 'px';
+    rulerEl.innerHTML='';
+    const sec = Math.ceil(total/1000);
+    for(let s=0; s<=sec; s++){
+      const x = msToPx(s*1000);
+      const tk=document.createElement('div'); tk.className='tick major';
+      tk.style.left = x + 'px'; rulerEl.appendChild(tk);
+      const lb=document.createElement('div'); lb.className='tick-label';
+      lb.style.left = x + 'px'; lb.textContent = s+'s'; rulerEl.appendChild(lb);
+      if(s<sec){ for(let i=1;i<5;i++){ const sx = msToPx(s*1000 + i*200); const mt=document.createElement('div'); mt.className='tick'; mt.style.left=sx+'px'; rulerEl.appendChild(mt); } }
+    }
+    drawAudioTrack();
+    tracksEl.innerHTML='';
+    layers.forEach((l, idx) => {
+      const row = document.createElement('div');
+      row.className = 'track-row';
+      const bar = document.createElement('div');
+      bar.className = 'layer-bar' + (l.selected ? ' selected' : '');
+      bar.dataset.idx = idx;
+      bar.style.left = msToPx(l.startMs) + 'px';
+      bar.style.width = Math.max(16, (l.duration/1000)*pxPerSec) + 'px';
+      bar.innerHTML = `<span class="bar-label">${esc(l.label)}</span><div class="resize-handle"></div>`;
+      attachBarHandlers(bar, l);
+      row.appendChild(bar);
+      tracksEl.appendChild(row);
+    });
+    setPlayhead(playheadMs);
+    updateTimes();
+  }
+
+  function attachBarHandlers(bar, layer){
+    bar.addEventListener('mousedown', e => {
+      e.stopPropagation(); e.preventDefault();
+      const isResize = e.target.classList.contains('resize-handle');
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const initStart = layer.startMs;
+      const initDur = layer.duration;
+      const initIdx = layers.indexOf(layer);
+      const rowHeight = 24;
+      let didMove = false;
+      let movedToIdx = initIdx;
+      bar.classList.add('dragging');
+      function onMove(ev){
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        if(Math.abs(dx) > 3 || Math.abs(dy) > 3) didMove = true;
+        if(isResize){
+          layer.duration = Math.max(100, snap(initDur + (dx/pxPerSec)*1000));
+          bar.style.width = Math.max(16, (layer.duration/1000)*pxPerSec) + 'px';
+        } else {
+          layer.startMs = Math.max(0, snap(initStart + (dx/pxPerSec)*1000));
+          bar.style.left = msToPx(layer.startMs) + 'px';
+          const targetIdx = Math.max(0, Math.min(layers.length - 1, initIdx + Math.round(dy / rowHeight)));
+          movedToIdx = targetIdx;
+          const rowDiff = targetIdx - initIdx;
+          bar.style.transform = `translateY(${rowDiff * rowHeight}px)`;
+        }
+        updateTimes();
+      }
+      function onUp(){
+        bar.classList.remove('dragging');
+        bar.style.transform = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        if(movedToIdx !== initIdx){
+          const currentIdx = layers.indexOf(layer);
+          layers.splice(currentIdx, 1);
+          layers.splice(movedToIdx, 0, layer);
+          renderLayers();
+          renderTimeline();
+        } else if(!didMove){
+          layer.selected = !layer.selected;
+          const idx = layers.indexOf(layer);
+          const row = layersEl.querySelector(`.lrow[data-idx="${idx}"]`);
+          if(row){
+            row.classList.toggle('selected', layer.selected);
+            const cb = row.querySelector('[data-f="sel"]');
+            if(cb) cb.checked = layer.selected;
+            row.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+          }
+          bar.classList.toggle('selected', layer.selected);
+          updateGroupButtons();
+        }
+        const total = getTotalMs();
+        const need = msToPx(total) + 20;
+        if(parseFloat(timelineEl.style.width) < need) renderTimeline();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  timelineEl.addEventListener('mousedown', e => {
+    if(e.target.closest('.layer-bar')) return;
+    const rect = timelineEl.getBoundingClientRect();
+    function setFromEvent(ev){
+      const x = ev.clientX - rect.left;
+      const ms = pxToMs(x);
+      setPlayhead(Math.max(0, Math.min(getTotalMs(), ms)));
+    }
+    setFromEvent(e);
+    function onMove(ev){ setFromEvent(ev); }
+    function onUp(){ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  function setPlayhead(ms){
+    playheadMs = Math.max(0, ms);
+    playheadEl.style.left = msToPx(playheadMs) + 'px';
+    if(audioEl && Math.abs(audioEl.currentTime - playheadMs/1000) > 0.05){
+      try { audioEl.currentTime = Math.min(audioEl.duration||0, playheadMs/1000); } catch(e){}
+    }
+    applyAllAt(playheadMs);
+    curTimeEl.textContent = fmt(playheadMs);
+  }
+  function applyAllAt(tMs){ layers.forEach(l => applyLayerStateAt(l, l.startMs, tMs)); }
+
+  const easeOut = p => 1 - Math.pow(1-p, 2);
+  function getStrokePaths(node){ const tag=(node.tagName||'').toLowerCase(); if(['line','path','polyline'].includes(tag)) return [node]; if(node.querySelectorAll) return Array.from(node.querySelectorAll('line, path, polyline')); return []; }
   function applyLayerStateAt(layer, startMs, tMs){
     const lt=tMs-startMs; let p=Math.max(0,Math.min(1, lt/layer.duration)); p=easeOut(p);
     layer.nodes.forEach(n => {
@@ -367,140 +504,145 @@
       else if(layer.anim==='slide-left'){ n.style.opacity=p; n.style.transform=`translateX(${(1-p)*-25}px)`; }
       else if(layer.anim==='slide-right'){ n.style.opacity=p; n.style.transform=`translateX(${(1-p)*25}px)`; }
       else if(layer.anim==='scale-up'){ n.style.opacity=p; n.style.transformOrigin='center'; n.style.transform=`scale(${0.85+p*0.15})`; }
-      else if(layer.anim==='draw'){
-        n.style.opacity=1; n.style.transform='none';
-        getStrokePaths(n).forEach(pa => {
-          try { const len=pa.__len||(pa.__len=(pa.getTotalLength?pa.getTotalLength():200));
-            pa.style.strokeDasharray=len; pa.style.strokeDashoffset=len*(1-p); } catch(e){}
-        });
-      }
+      else if(layer.anim==='draw'){ n.style.opacity=1; n.style.transform='none'; getStrokePaths(n).forEach(pa => { try { const len=pa.__len||(pa.__len=(pa.getTotalLength?pa.getTotalLength():200)); pa.style.strokeDasharray=len; pa.style.strokeDashoffset=len*(1-p); } catch(e){} }); }
     });
   }
-  function resetStage(){
-    layers.forEach(l => {
-      l.nodes.forEach(n => {
-        n.style.transition='none'; n.style.opacity='0'; n.style.transform='none';
-        getStrokePaths(n).forEach(pa => {
-          try { const len=pa.__len||(pa.__len=(pa.getTotalLength?pa.getTotalLength():200));
-            pa.style.strokeDasharray=len; pa.style.strokeDashoffset=len; } catch(e){}
-        });
-      });
-    });
-  }
-  function endStage(){
-    layers.forEach(l => {
-      l.nodes.forEach(n => {
-        n.style.opacity='1'; n.style.transform='none';
-        getStrokePaths(n).forEach(pa => { pa.style.strokeDashoffset=0; });
-      });
-    });
-  }
-  function playPreview(){
-    if(!layers.length || isRendering) return;
-    resetStage();
-    const starts=computeStarts(), total=getTotalMs(), t0=performance.now();
-    function tick(){
-      const t=performance.now()-t0;
-      if(t>total){ endStage(); return; }
-      layers.forEach((l,i)=>applyLayerStateAt(l,starts[i],t));
-      requestAnimationFrame(tick);
-    }
-    tick();
-  }
-  playBtn.addEventListener('click', playPreview);
+  function resetStage(){ layers.forEach(l => { l.nodes.forEach(n => { n.style.transition='none'; n.style.opacity='0'; n.style.transform='none'; getStrokePaths(n).forEach(pa => { try { const len=pa.__len||(pa.__len=(pa.getTotalLength?pa.getTotalLength():200)); pa.style.strokeDasharray=len; pa.style.strokeDashoffset=len; } catch(e){} }); }); }); }
+  function endStage(){ layers.forEach(l => { l.nodes.forEach(n => { n.style.opacity='1'; n.style.transform='none'; getStrokePaths(n).forEach(pa => { pa.style.strokeDashoffset=0; }); }); }); }
 
-  function setRendering(b){
-    isRendering=b; renderBtn.disabled=b; playBtn.disabled=b;
-    drop.style.pointerEvents=b?'none':''; drop.style.opacity=b?'0.5':'1';
-  }
-  function pickMime(){
-    const list=['video/mp4;codecs=h264,aac','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
-    for(const m of list){
-      if(typeof MediaRecorder!=='undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
+  function play(){
+    if(!layers.length) return;
+    if(playheadMs >= getTotalMs() - 50) setPlayhead(0);
+    isPlaying = true; playBtn.textContent='⏸';
+    if(audioEl){ try { audioEl.currentTime = playheadMs/1000; audioEl.play().catch(()=>{}); } catch(e){} }
+    const startWall = performance.now(); const startMs = playheadMs;
+    function tick(){
+      if(!isPlaying){ rafId=null; return; }
+      const elapsed = performance.now() - startWall;
+      const t = startMs + elapsed;
+      if(t >= getTotalMs()){ setPlayhead(getTotalMs()); pause(); endStage(); return; }
+      setPlayhead(t);
+      const px = msToPx(t);
+      if(px - tlScroll.scrollLeft > tlScroll.clientWidth - 80) tlScroll.scrollLeft = px - tlScroll.clientWidth + 200;
+      rafId = requestAnimationFrame(tick);
     }
-    return 'video/webm';
+    rafId = requestAnimationFrame(tick);
   }
+  function pause(){ isPlaying=false; playBtn.textContent='▶'; if(audioEl){ try{ audioEl.pause(); }catch(e){} } if(rafId){ cancelAnimationFrame(rafId); rafId=null; } }
+  playBtn.addEventListener('click', () => { if(isPlaying) pause(); else play(); });
+
+  function readAudio(f){ baseFilename = baseFilename || f.name.replace(/\.[^.]+$/,''); loadAudio(f); }
+  async function loadAudio(file){
+    if(audioEl){ audioEl.pause(); audioEl.removeAttribute('src'); }
+    audioEl = new Audio();
+    audioEl.src = URL.createObjectURL(file);
+    audioEl.preload = 'metadata';
+    await new Promise((res,rej) => { audioEl.onloadedmetadata = res; audioEl.onerror = rej; }).catch(()=>{});
+    audioDuration = audioEl.duration || 0;
+    audioLabel.textContent = file.name.slice(0, 22);
+    dropAudio.classList.add('has-file');
+    audioEmptyEl.style.display='none';
+    audioTrackEl.classList.add('has-audio');
+    try {
+      const ab = await file.arrayBuffer();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      audioBuffer = await ctx.decodeAudioData(ab);
+      audioDuration = audioBuffer.duration;
+    } catch(e){ audioBuffer = null; }
+    renderTimeline();
+  }
+
+  function drawAudioTrack(){
+    audioTrackEl.querySelectorAll('canvas').forEach(c => c.remove());
+    if(audioDuration <= 0){ audioEmptyEl.style.display=''; audioTrackEl.classList.remove('has-audio'); return; }
+    audioEmptyEl.style.display='none';
+    const audioWidth = (audioDuration) * pxPerSec;
+    const trackHeight = 36;
+    const canvas = document.createElement('canvas');
+    canvas.width = audioWidth * 2; canvas.height = trackHeight * 2;
+    canvas.style.left = TIMELINE_LEFT_PAD + 'px';
+    canvas.style.width = audioWidth + 'px';
+    canvas.style.height = trackHeight + 'px';
+    audioTrackEl.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2,2);
+    if(audioBuffer){
+      const data = audioBuffer.getChannelData(0);
+      const peakCount = Math.max(80, Math.floor(audioWidth / 2));
+      const samplesPerPeak = Math.max(1, Math.floor(data.length / peakCount));
+      const peaks = [];
+      for(let i=0;i<peakCount;i++){
+        let max=0; const off = i*samplesPerPeak;
+        for(let j=0;j<samplesPerPeak;j++){ const v=Math.abs(data[off+j]||0); if(v>max) max=v; }
+        peaks.push(max);
+      }
+      ctx.fillStyle = '#185FA5';
+      const barW = audioWidth / peakCount;
+      peaks.forEach((p,i) => {
+        const h = Math.max(1, p * trackHeight * 0.9);
+        ctx.fillRect(i*barW, (trackHeight-h)/2, Math.max(0.5, barW-0.5), h);
+      });
+    } else {
+      ctx.fillStyle = '#B5D4F4';
+      ctx.fillRect(0, trackHeight/2 - 1, audioWidth, 2);
+    }
+  }
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  function setRendering(b){ isRendering=b; renderBtn.disabled=b; playBtn.disabled=b; }
+  function pickMime(){ const list=['video/mp4;codecs=h264,aac','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']; for(const m of list){ if(typeof MediaRecorder!=='undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m; } return 'video/webm'; }
   async function renderVideo(){
     if(!layers.length || isRendering) return;
-    setRendering(true);
-    downloadEl.classList.remove('show');
-    progressEl.classList.add('show');
-    progressLabel.textContent='Preparing…'; barFill.style.width='0%';
-
+    pause();
+    setRendering(true); downloadEl.classList.remove('show'); progressEl.classList.add('show'); progressLabel.textContent='Preparing…'; barFill.style.width='0%';
     const vb=svgEl.viewBox && svgEl.viewBox.baseVal;
     const vbw=(vb&&vb.width)?vb.width:(+svgEl.getAttribute('width')||1126);
     const vbh=(vb&&vb.height)?vb.height:(+svgEl.getAttribute('height')||712);
-    const ar=vbw/vbh;
-    let w=1920, h=Math.round(1920/ar);
-    if(h>1080){ h=1080; w=Math.round(1080*ar); }
+    const ar=vbw/vbh; let w=1920, h=Math.round(1920/ar); if(h>1080){ h=1080; w=Math.round(1080*ar); }
     w=Math.round(w/2)*2; h=Math.round(h/2)*2;
-
-    const canvas=document.createElement('canvas');
-    canvas.width=w; canvas.height=h;
+    const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
     const ctx=canvas.getContext('2d');
     const stream=canvas.captureStream(30);
-    const mime=pickMime();
-    const ext=mime.includes('mp4')?'mp4':'webm';
-    let recorder;
-    try { recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000}); }
-    catch(err){ progressLabel.textContent='Browser cannot record video'; setRendering(false); return; }
-    const chunks=[];
-    recorder.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+    const mime=pickMime(); const ext=mime.includes('mp4')?'mp4':'webm';
+    let recorder; try { recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000}); } catch(err){ progressLabel.textContent='Browser cannot record'; setRendering(false); return; }
+    const chunks=[]; recorder.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
     const stopped=new Promise(r=>{ recorder.onstop=r; });
-
     resetStage();
-    const starts=computeStarts(), total=getTotalMs();
-
+    const total = Math.max(1000, getLastLayerEnd() + 300);
     async function paintAt(tMs){
-      layers.forEach((l,i)=>applyLayerStateAt(l,starts[i],tMs));
-      const c=svgEl.cloneNode(true);
-      c.setAttribute('width',w); c.setAttribute('height',h);
+      applyAllAt(tMs);
+      const c=svgEl.cloneNode(true); c.setAttribute('width',w); c.setAttribute('height',h);
       if(!c.getAttribute('xmlns')) c.setAttribute('xmlns','http://www.w3.org/2000/svg');
       if(!c.getAttribute('viewBox') && vbw && vbh) c.setAttribute('viewBox',`0 0 ${vbw} ${vbh}`);
       const xml=new XMLSerializer().serializeToString(c);
       const dataUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
       const img=new Image();
       await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=dataUrl; }).catch(()=>{});
-      ctx.fillStyle='#EDF6FF'; ctx.fillRect(0,0,w,h);
-      ctx.drawImage(img,0,0,w,h);
+      ctx.fillStyle='#EDF6FF'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
     }
-
-    await paintAt(0);
-    recorder.start();
-    progressLabel.textContent='Rendering frames…';
+    await paintAt(0); recorder.start(); progressLabel.textContent='Rendering frames…';
     const t0=performance.now();
     try {
-      while(true){
-        const elapsed=performance.now()-t0;
-        if(elapsed>total+200) break;
-        await paintAt(elapsed);
-        const pct=Math.min(96, Math.round((elapsed/total)*100));
-        barFill.style.width=pct+'%';
-        await new Promise(r=>requestAnimationFrame(r));
-      }
-      const hs=performance.now();
-      while(performance.now()-hs<500){
-        await paintAt(total);
-        await new Promise(r=>requestAnimationFrame(r));
-      }
+      while(true){ const elapsed=performance.now()-t0; if(elapsed>total+200) break; await paintAt(elapsed); const pct=Math.min(96, Math.round((elapsed/total)*100)); barFill.style.width=pct+'%'; await new Promise(r=>requestAnimationFrame(r)); }
+      const hs=performance.now(); while(performance.now()-hs<400){ await paintAt(total); await new Promise(r=>requestAnimationFrame(r)); }
     } catch(err){ console.error(err); }
-
     progressLabel.textContent='Finalizing…';
     recorder.stop(); await stopped;
     const blob=new Blob(chunks,{type:mime});
     const url=URL.createObjectURL(blob);
     const sizeMB=(blob.size/(1024*1024)).toFixed(1);
-    downloadLink.href=url;
-    downloadLink.download=baseFilename+'.'+ext;
-    downloadLink.innerHTML=`⬇ <span class="lbl">Download .${ext}</span> <span class="size">(${sizeMB} MB)</span>`;
+    downloadLink.href=url; downloadLink.download=baseFilename+'.'+ext;
+    downloadLink.innerHTML=`⬇ <span class="lbl">Download .${ext}</span> <span class="size">${sizeMB} MB</span>`;
     barFill.style.width='100%';
-    progressLabel.textContent = ext==='mp4' ? 'Done · MP4 ready' : 'Done · WebM ready';
+    progressLabel.textContent = ext==='mp4' ? 'Done · MP4 ready (audio not included)' : 'Done · WebM ready (audio not included)';
     downloadEl.classList.add('show');
-    endStage();
-    setRendering(false);
+    setRendering(false); setPlayhead(0);
   }
   renderBtn.addEventListener('click', renderVideo);
-  updateMeta();
+
+  staggerInput.addEventListener('change', () => { if(layers.length){ distributeStarts(+staggerInput.value || 200); renderTimeline(); } });
+  updateTimes();
 })();
 </script>
 </body>
